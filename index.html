@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
@@ -38,7 +37,6 @@
   <div class="result" id="resultBox"></div>
 
   <script>
-    // 使用你的 Google Sheet API
     const SHEET_URL = 'https://api.sheetbest.com/sheets/3f39aa34-33b1-4c39-ad2e-4790a8bafd81';
 
     async function searchStudent() {
@@ -54,17 +52,30 @@
       try {
         const response = await fetch(SHEET_URL);
         const data = await response.json();
-        const student = data.find(row => row['學生姓名'] === name);
 
-        if (student) {
-          resultBox.innerHTML = `
-            <strong>${student['學生姓名']}</strong><br>
-            上課日期：${student['上課日期']}<br>
-            是否已繳費：${student['已繳費']}<br>
-            繳費日期：${student['繳費日期']}<br>
-            是否需繳費：${student['是否需繳費']}<br>
-            備註：${student['提醒']}<br>
-          `;
+        // 過濾出符合該學生姓名的所有紀錄
+        const records = data.filter(row => row['學生姓名'] === name);
+
+        if (records.length > 0) {
+          // 依照上課日期排序（假設格式為 YYYY/MM/DD 或 YYYY-MM-DD）
+          records.sort((a, b) => new Date(b['上課日期']) - new Date(a['上課日期']));
+
+          // 取最近四筆資料
+          const latest = records.slice(0, 4);
+
+          let html = `<strong>${name}</strong> 最近 4 次上課紀錄：<br><br>`;
+          latest.forEach((record, i) => {
+            html += `
+              <u>第 ${i + 1} 筆</u><br>
+              上課日期：${record['上課日期']}<br>
+              是否已繳費：${record['已繳費']}<br>
+              繳費日期：${record['繳費日期']}<br>
+              是否需繳費：${record['是否需繳費']}<br>
+              備註：${record['提醒']}<br><br>
+            `;
+          });
+
+          resultBox.innerHTML = html;
         } else {
           resultBox.innerHTML = '查無此學生資料';
         }
@@ -75,3 +86,4 @@
   </script>
 </body>
 </html>
+
