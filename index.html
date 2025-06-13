@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
@@ -26,6 +27,19 @@
       padding: 1em;
       border: 1px solid #ccc;
     }
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      margin-top: 1em;
+    }
+    th, td {
+      border: 1px solid #999;
+      padding: 0.5em;
+      text-align: center;
+    }
+    th {
+      background-color: #f2f2f2;
+    }
   </style>
 </head>
 <body>
@@ -53,27 +67,44 @@
         const response = await fetch(SHEET_URL);
         const data = await response.json();
 
-        // 過濾出符合該學生姓名的所有紀錄
         const records = data.filter(row => row['學生姓名'] === name);
 
         if (records.length > 0) {
-          // 依照上課日期排序（假設格式為 YYYY/MM/DD 或 YYYY-MM-DD）
           records.sort((a, b) => new Date(b['上課日期']) - new Date(a['上課日期']));
+          const latest = records.slice(0, 8);
 
-          // 取最近四筆資料
-          const latest = records.slice(0, 4);
+          let html = `<strong>${name}</strong> 最近兩期上課紀錄：`;
 
-          let html = `<strong>${name}</strong> 最近 4 次上課紀錄：<br><br>`;
-          latest.forEach((record, i) => {
-            html += `
-              <u>第 ${i + 1} 筆</u><br>
-              上課日期：${record['上課日期']}<br>
-              是否已繳費：${record['已繳費']}<br>
-              繳費日期：${record['繳費日期']}<br>
-              是否需繳費：${record['是否需繳費']}<br>
-              備註：${record['提醒']}<br><br>
-            `;
-          });
+          for (let term = 0; term < 2; term++) {
+            const termRecords = latest.slice(term * 4, (term + 1) * 4);
+            if (termRecords.length === 0) break;
+
+            html += `<h3>第 ${term + 1} 期</h3><table><thead><tr>
+              <th>堂次</th>
+              <th>上課日期</th>
+              <th>上課分鐘數</th>
+              <th>是否已繳費</th>
+              <th>繳費日期</th>
+              <th>是否需繳費</th>
+              <th>備註</th>
+            </tr></thead><tbody>`;
+
+            termRecords.forEach((record, i) => {
+              html += `
+                <tr>
+                  <td>第 ${i + 1} 堂</td>
+                  <td>${record['上課日期']}</td>
+                  <td>${record['上課分鐘數'] || '-'}</td>
+                  <td>${record['是否已繳費']}</td>
+                  <td>${record['繳費日期']}</td>
+                  <td>${record['是否需繳費']}</td>
+                  <td>${record['提醒事項']}</td>
+                </tr>
+              `;
+            });
+
+            html += '</tbody></table>';
+          }
 
           resultBox.innerHTML = html;
         } else {
@@ -86,4 +117,3 @@
   </script>
 </body>
 </html>
-
