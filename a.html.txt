@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>學生上課／繳費查詢</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      max-width: 600px;
+      margin: 2em auto;
+      padding: 1em;
+    }
+    input {
+      padding: 0.5em;
+      width: 100%;
+      margin-bottom: 1em;
+      font-size: 1em;
+    }
+    button {
+      padding: 0.5em 1em;
+      font-size: 1em;
+    }
+    .result {
+      margin-top: 2em;
+      padding: 1em;
+      border: 1px solid #ccc;
+    }
+  </style>
+</head>
+<body>
+  <h1>學生查詢系統</h1>
+  <p>請輸入學生姓名：</p>
+  <input type="text" id="nameInput" placeholder="例如：劭睿" />
+  <button onclick="searchStudent()">查詢</button>
+
+  <div class="result" id="resultBox"></div>
+
+  <script>
+    // 更換為你的 Google Sheet 的 API JSON 連結
+    const SHEET_URL = 'https://api.sheetbest.com/sheets/3f39aa34-33b1-4c39-ad2e-4790a8bafd81';
+
+    async function searchStudent() {
+      const name = document.getElementById('nameInput').value.trim();
+      const resultBox = document.getElementById('resultBox');
+      resultBox.innerHTML = '查詢中...';
+
+      if (!name) {
+        resultBox.innerHTML = '請輸入學生姓名';
+        return;
+      }
+
+      try {
+        const response = await fetch(SHEET_URL);
+        const data = await response.json();
+        const student = data.find(row => row['學生姓名'] === name);
+
+        if (student) {
+          resultBox.innerHTML = `
+            <strong>${student['學生姓名']}</strong><br>
+            上課日期：${student['上課日期']}<br>
+            是否已繳費：${student['已繳費']}<br>
+            繳費日期：${student['繳費日期']}<br>
+            是否需繳費：${student['是否需繳費']}<br>
+            備註：${student['提醒']}<br>
+          `;
+        } else {
+          resultBox.innerHTML = '查無此學生資料';
+        }
+      } catch (err) {
+        resultBox.innerHTML = '資料載入失敗，請稍後再試';
+      }
+    }
+  </script>
+</body>
+</html>
